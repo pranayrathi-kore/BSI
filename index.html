@@ -2709,7 +2709,7 @@ a.btn-site-link-orange:hover, button.btn-site-link-orange:hover {
                 const iconEl = document.getElementById("bsi-navbar-login-icon");
                 const labelEl = document.getElementById("bsi-navbar-login-label");
                 if (iconEl) iconEl.innerHTML = BSI_LOCK_ICON_SVG;
-                if (labelEl) labelEl.textContent = "";
+                if (labelEl) labelEl.textContent = "Sign In";
             }
 
             function completeSignIn(customer) {
@@ -2783,8 +2783,10 @@ a.btn-site-link-orange:hover, button.btn-site-link-orange:hover {
                     // Already identified via session-metadata for this visit — reflect
                     // it in the nav control without asking them to verify again.
                     setNavLoginState(bsiStoredCustomer);
-                } else if (iconEl) {
-                    iconEl.innerHTML = BSI_LOCK_ICON_SVG;
+                } else {
+                    const labelEl = document.getElementById("bsi-navbar-login-label");
+                    if (iconEl) iconEl.innerHTML = BSI_LOCK_ICON_SVG;
+                    if (labelEl) labelEl.textContent = "Sign In";
                 }
                 btn.addEventListener("click", (e) => {
                     e.stopPropagation();
@@ -3128,16 +3130,6 @@ a.btn-site-link-orange:hover, button.btn-site-link-orange:hover {
                                         class="navbar-text">Hubungan Investor</span></a>
                             </div>
                         
-                        <div id="bsi-navbar-login" class="nav-item mx-3 d-none d-md-flex align-items-center" style="position: relative;">
-                            <button type="button" id="bsi-navbar-login-btn" class="d-flex align-items-center" style="background: #00A39D; border: none; border-radius: 6px; padding: 6px 10px; cursor: pointer; gap: 6px;">
-                                <span id="bsi-navbar-login-icon" style="display: flex; width: 16px; height: 16px;"></span>
-                                <span id="bsi-navbar-login-label" class="text-white navbar-text" style="font-size: 13px; font-weight: 600;"></span>
-                                <img src="https://www.bankbsi.co.id/img/arrow-down-chev-white.svg" style="width: 10px; height: 10px;" />
-                            </button>
-                            <div id="bsi-navbar-login-dropdown" style="display: none; position: absolute; top: calc(100% + 8px); right: 0; background: #fff; border-radius: 10px; box-shadow: 0 8px 24px rgba(0,0,0,.18); padding: 16px; width: 260px; z-index: 1000;"></div>
-                        </div>
-
-
                         <div class="nav-item px-3">
                             <a class="nav-link active" href="#"><img id="search-icon"
                                     src="https://www.bankbsi.co.id/img/search-dark.png" /></a>
@@ -3166,6 +3158,15 @@ a.btn-site-link-orange:hover, button.btn-site-link-orange:hover {
                             </a>
                         </div>
                         
+
+                        <div id="bsi-navbar-login" class="nav-item ml-3 mr-2 d-none d-md-flex align-items-center" style="position: relative; flex-shrink: 0;">
+                            <button type="button" id="bsi-navbar-login-btn" class="d-flex align-items-center flex-nowrap" style="background: #00A39D; border: none; border-radius: 6px; padding: 6px 12px; cursor: pointer; gap: 6px; white-space: nowrap; flex-shrink: 0;">
+                                <span id="bsi-navbar-login-icon" style="display: flex; width: 16px; height: 16px; flex-shrink: 0;"></span>
+                                <span id="bsi-navbar-login-label" class="text-white navbar-text" style="font-size: 13px; font-weight: 600; white-space: nowrap;">Sign In</span>
+                                <img src="https://www.bankbsi.co.id/img/arrow-down-chev-white.svg" style="width: 10px; height: 10px; flex-shrink: 0;" />
+                            </button>
+                            <div id="bsi-navbar-login-dropdown" style="display: none; position: absolute; top: calc(100% + 8px); right: 0; background: #fff; border-radius: 10px; box-shadow: 0 8px 24px rgba(0,0,0,.18); padding: 16px; width: 260px; z-index: 1000;"></div>
+                        </div>
 
                         <div class="nav-item mx-3 navbar-mobile">
                             <img style="cursor: pointer;" id="hamburger-icon"
