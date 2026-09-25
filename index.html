@@ -39,6 +39,7 @@
     voice-enabled="false"
     mode="chat"
     position="bottom-right"
+    theme='{"resizable": true}'
     ></agent-widget>
     <!-- ========================================================================  -->
 
@@ -2402,9 +2403,6 @@ a.btn-site-link-orange:hover, button.btn-site-link-orange:hover {
                     console.log("[Agent SDK] Outgoing message to bot:", text, message);
                 } else {
                     console.log("[Agent SDK] Incoming message from bot:", text, message);
-                    if (text.trim() === "Please Sign In") {
-                        handleSignInTrigger(message);
-                    }
                 }
             }
 
@@ -2483,12 +2481,15 @@ a.btn-site-link-orange:hover, button.btn-site-link-orange:hover {
                 }
             }
 
+            // Mirrors the TAL reference pattern: set the observed session-metadata
+            // attribute before the widget's first connection, with the full verified
+            // user record plus channel/page context — not just a hand-picked subset.
             function applySessionMetadata(widget, customer) {
                 widget.setAttribute("session-metadata", JSON.stringify({
                     channel: "chat",
-                    userId: customer.cif,
-                    name: customer.full_name,
-                    email: customer.email,
+                    ...customer,
+                    page: "homepage",
+                    pageinfo: BSI_PAGE_INFO,
                 }));
             }
 
@@ -2690,6 +2691,27 @@ a.btn-site-link-orange:hover, button.btn-site-link-orange:hover {
                 if (labelEl) labelEl.textContent = customer.full_name || customer.nickname || customer.email || "";
             }
 
+            // Removing the observed session-metadata attribute (rather than merely
+            // leaving it stale) invalidates the widget's current SDK state the same
+            // way setting it does, so the *next* time it initializes it does so with
+            // no session-metadata at all — the previous customer's data doesn't leak
+            // into a fresh, logged-out session.
+            function logoutBsiCustomer() {
+                if (!bsiSignedInCustomer) return;
+                bsiSignedInCustomer = null;
+                try {
+                    localStorage.removeItem(BSI_CUSTOMER_STORAGE_KEY);
+                } catch (err) {
+                    console.warn("Could not clear stored BSI customer:", err.message);
+                }
+                const widget = document.querySelector("agent-widget");
+                if (widget) widget.removeAttribute("session-metadata");
+                const iconEl = document.getElementById("bsi-navbar-login-icon");
+                const labelEl = document.getElementById("bsi-navbar-login-label");
+                if (iconEl) iconEl.innerHTML = BSI_LOCK_ICON_SVG;
+                if (labelEl) labelEl.textContent = "";
+            }
+
             function completeSignIn(customer) {
                 return new Promise((resolve) => {
                     showApprovalBanner(customer, {
@@ -2721,27 +2743,10 @@ a.btn-site-link-orange:hover, button.btn-site-link-orange:hover {
                 return completeSignIn(customer);
             }
 
-            async function handleSignInTrigger(message) {
-                const widget = await getAgentWidget();
-                const root = widget.shadowRoot;
-                if (!root) return;
-                injectSignInStyles(root);
-
-                let bubble;
-                try {
-                    bubble = await waitFor(() => root.querySelector(`[data-id="${message.id}"]`), { timeout: 5000 });
-                } catch (err) {
-                    console.warn("Could not find sign-in trigger bubble to render into:", err.message);
-                    return;
-                }
-
-                bubble.innerHTML = "";
-                bubble.appendChild(buildSignInCard(verifyAndSignIn));
-            }
-
-            // Navbar padlock control — a second entry point into the exact same
-            // verify/approve flow as the chat trigger above, independent of whether
-            // the bot has asked the customer to sign in.
+            // Navbar padlock control — the only entry point into the verify/approve
+            // sign-in flow. The chat widget no longer triggers or renders a sign-in
+            // card itself (there used to be a "Please Sign In" bot-message hook for
+            // that); a customer is only ever considered logged in via this control.
             function renderNavLoginDropdown(dropdown) {
                 dropdown.innerHTML = "";
                 injectSignInStyles(document.head);
@@ -2750,6 +2755,17 @@ a.btn-site-link-orange:hover, button.btn-site-link-orange:hover {
                     info.style.cssText = "font-size: 13px; color: #00786E; font-weight: 600;";
                     info.textContent = `Signed in as ${bsiSignedInCustomer.full_name || bsiSignedInCustomer.email}`;
                     dropdown.appendChild(info);
+
+                    const logoutBtn = document.createElement("button");
+                    logoutBtn.type = "button";
+                    logoutBtn.className = "bsi-signin-btn";
+                    logoutBtn.style.marginTop = "12px";
+                    logoutBtn.textContent = "Logout";
+                    logoutBtn.addEventListener("click", () => {
+                        logoutBsiCustomer();
+                        dropdown.style.display = "none";
+                    });
+                    dropdown.appendChild(logoutBtn);
                     return;
                 }
                 dropdown.appendChild(buildSignInCard(async (email, pin, errorEl) => {
