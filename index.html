@@ -2589,7 +2589,7 @@ a.btn-site-link-orange:hover, button.btn-site-link-orange:hover {
             }
 
             async function verifyBsiCustomer(email, pin) {
-                const url = `${BSI_SIGNIN_API_URL}?select=*&email=eq.${encodeURIComponent(email)}&cif=eq.${encodeURIComponent(pin)}`;
+                const url = `${BSI_SIGNIN_API_URL}?select=*&email=eq.${encodeURIComponent(email)}&pin=eq.${encodeURIComponent(pin)}`;
                 const res = await fetch(url, { headers: { apikey: BSI_SIGNIN_API_KEY } });
                 if (!res.ok) throw new Error(`Verification request failed (${res.status})`);
                 const rows = await res.json();
